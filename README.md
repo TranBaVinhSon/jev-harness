@@ -2,6 +2,8 @@
 
 This repository measures Jev decisions around a Claude Agent SDK loop. Claude still chooses and calls tools. Jev can rank deferred tools, trim large tool results, and choose a model before a session or subagent starts.
 
+![Where Jev plugs into an agent loop](docs/jev-agent-loop.png)
+
 ## Run the demo
 
 ```sh
