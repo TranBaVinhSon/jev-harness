@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="776" viewBox="0 0 940 776" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Where Jev plugs into an agent loop</title>
+  <defs>
+    <marker id="flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2B2B33"/>
+    </marker>
+    <marker id="jev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6D4AFF"/>
+    </marker>
+  </defs>
+
+  <rect width="940" height="776" fill="#FFFFFF"/>
+
+  <!-- Title and legend -->
+  <text x="40" y="38" font-size="20" font-weight="600" fill="#1C1C22">Where Jev plugs into an agent loop</text>
+  <rect x="604" y="24" width="14" height="14" rx="3" fill="#F1EDFF" stroke="#6D4AFF"/>
+  <text x="626" y="36" font-size="12.5" fill="#55555F">Jev decision (the agent still decides)</text>
+
+  <!-- Session start -->
+  <rect x="80" y="62" width="300" height="52" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="230" y="93" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">Session start</text>
+  <text x="400" y="84" font-size="12.5" fill="#6B6B76">fixed starting model, chosen from the</text>
+  <text x="400" y="101" font-size="12.5" fill="#6B6B76">baseline, not from the prompt</text>
+
+  <!-- Agent loop container -->
+  <rect x="40" y="146" width="860" height="600" rx="16" fill="#F6F6F8" stroke="#D5D5DD" stroke-width="1.5"/>
+  <text x="252" y="170" font-size="13" font-weight="600" fill="#55555F">Agent loop · the agent reasons and chooses every tool call</text>
+  <line x1="230" y1="114" x2="230" y2="194" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- Decide -->
+  <rect x="80" y="196" width="300" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="230" y="223" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">Agent decides on a tool call</text>
+  <line x1="230" y1="240" x2="230" y2="254" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- Kinds of call -->
+  <rect x="80" y="256" width="300" height="202" rx="10" fill="#FFFFFF" stroke="#C4C4CC" stroke-dasharray="4 4"/>
+  <text x="96" y="276" font-size="11.5" fill="#6B6B76">the call is one of</text>
+  <rect x="100" y="284" width="260" height="34" rx="17" fill="#FFFFFF" stroke="#9A9AA6"/>
+  <text x="230" y="306" font-size="13.5" fill="#1C1C22" text-anchor="middle">tool search</text>
+  <rect x="100" y="326" width="260" height="34" rx="17" fill="#FFFFFF" stroke="#9A9AA6"/>
+  <text x="230" y="348" font-size="13.5" fill="#1C1C22" text-anchor="middle">skill</text>
+  <rect x="100" y="368" width="260" height="34" rx="17" fill="#FFFFFF" stroke="#9A9AA6"/>
+  <text x="230" y="390" font-size="13.5" fill="#1C1C22" text-anchor="middle">shell command</text>
+  <rect x="100" y="410" width="260" height="34" rx="17" fill="#FFFFFF" stroke="#C4C4CC" stroke-dasharray="3 3"/>
+  <text x="230" y="432" font-size="13.5" fill="#8A8A94" text-anchor="middle">any other tool</text>
+  <line x1="230" y1="458" x2="230" y2="476" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- Tool runs -->
+  <rect x="80" y="478" width="300" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="230" y="505" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">Tool runs</text>
+  <line x1="230" y1="522" x2="230" y2="540" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- Tool result -->
+  <rect x="80" y="542" width="300" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="230" y="569" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">Tool result</text>
+  <line x1="230" y1="586" x2="230" y2="604" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- After each tool batch -->
+  <rect x="80" y="606" width="300" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="230" y="633" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">After each tool batch</text>
+  <line x1="230" y1="650" x2="230" y2="668" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- Reads results -->
+  <rect x="80" y="670" width="300" height="56" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="230" y="694" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">Agent reads the results,</text>
+  <text x="230" y="714" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">then loops or answers</text>
+
+  <!-- Loop back -->
+  <path d="M80,698 H60 V218 H78" fill="none" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+  <text x="52" y="458" font-size="12" fill="#55555F" text-anchor="middle" transform="rotate(-90 52 458)">loop</text>
+
+  <!-- Answer exit -->
+  <line x1="380" y1="698" x2="470" y2="698" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+  <text x="480" y="703" font-size="13.5" fill="#1C1C22">answer</text>
+
+  <!-- Jev notes -->
+  <g font-size="13.5" fill="#2A2140">
+    <rect x="500" y="284" width="380" height="34" rx="8" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="516" y="306"><tspan font-weight="700" fill="#6D4AFF">P1</tspan>  Jev re-ranks which tools load</text>
+    <line x1="500" y1="301" x2="362" y2="301" stroke="#6D4AFF" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#jev)"/>
+
+    <rect x="500" y="326" width="380" height="34" rx="8" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="516" y="348"><tspan font-weight="700" fill="#6D4AFF">P1</tspan>  Jev flags a better-fitting skill</text>
+    <line x1="500" y1="343" x2="362" y2="343" stroke="#6D4AFF" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#jev)"/>
+
+    <rect x="500" y="368" width="380" height="34" rx="8" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="516" y="390"><tspan font-weight="700" fill="#6D4AFF">P4</tspan>  Jev may auto-allow read-only commands</text>
+    <line x1="500" y1="385" x2="362" y2="385" stroke="#6D4AFF" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#jev)"/>
+
+    <rect x="500" y="532" width="380" height="54" rx="8" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="516" y="555"><tspan font-weight="700" fill="#6D4AFF">P2</tspan>  Jev keeps the relevant chunks,</text>
+    <text x="541" y="575">spills the rest to a file</text>
+    <line x1="500" y1="564" x2="382" y2="564" stroke="#6D4AFF" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#jev)"/>
+
+    <rect x="500" y="596" width="380" height="72" rx="8" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="516" y="619"><tspan font-weight="700" fill="#6D4AFF">P3</tspan>  Jev reads the progress so far:</text>
+    <text x="541" y="639">stuck, or harder than it looked?</text>
+    <text x="541" y="659">→ switch to a stronger model, once</text>
+    <line x1="500" y1="628" x2="382" y2="628" stroke="#6D4AFF" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#jev)"/>
+  </g>
+</svg>
