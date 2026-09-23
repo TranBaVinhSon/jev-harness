@@ -2,6 +2,8 @@
 
 This repository measures whether Jev lowers the cost per passed Claude Agent SDK task without reducing the pass rate. Claude chooses tools and skills. Jev ranks deferred tools, trims large tool results with a read-back path, and recommends one mid-session model or effort escalation after observed lack of progress.
 
+![Where Jev plugs into an agent loop](docs/jev-agent-loop.png)
+
 ## Install and test
 
 ```sh
@@ -91,3 +93,14 @@ The grader runs each arm and repeat through the same judge, sets `coverage`, mar
 ## App-specific tasks
 
 Copy `bench/config.ts` to `bench/config.<app>.ts`, replace the MCP servers and task file, and keep the arm definitions unchanged. A benchmark task may specify `expectTools`, `expectAnswer`, and an application-specific `check`. Use `lease` when every run needs an isolated sandbox. Add skill advice only in the app benchmark because MCP-Atlas has no skills.
+
+## Roadmap
+
+Each item is a Jev decision in the agent loop, shown dashed in the diagram. Check each classifier offline against logged decisions before it runs in a benchmark.
+
+- **Jev as the benchmark judge.** Grade answers claim by claim with Jev instead of an LLM judge. Validate it first against the Claude judge's per-claim verdicts on existing graded runs.
+- **Completion check.** A Stop hook asks whether the last answer covers every part of the request and, if not, returns `decision: "block"` so the agent keeps working, at most once per session. Validate it on graded answers: coverage below 1 marks an incomplete answer.
+- **Permission gate.** A PreToolUse hook auto-approves safe shell commands and tool calls and asks the user about risky ones. Measure precision and recall on a labeled set of commands.
+- **Hint instead of escalation.** The escalation signals and Jev's progress questions stay the same. Instead of switching models, the PostToolBatch hook adds one of a fixed set of hints as context, such as "change approach" or "answer with what you have". The model and its prompt cache stay the same.
+- **Context compaction.** Near the context limit, Jev picks old tool results to drop, keeping them readable through `read_spill`.
+- **Skill advice.** Jev flags a better-fitting skill before a Skill call runs.
