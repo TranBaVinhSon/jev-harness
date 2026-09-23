@@ -44,7 +44,7 @@ function evidenceTokens(answer: string, output: string): string[] {
 }
 
 if (!process.env.TYPESAFE_API_KEY) throw new Error("TYPESAFE_API_KEY is required for trim replay");
-const baseline = process.env.BASELINE ?? "baseline";
+const baseline = process.env.BASELINE ?? "before";
 const rows = process.argv
   .slice(2)
   .flatMap((file) => readFileSync(file, "utf8").split("\n").filter(Boolean))

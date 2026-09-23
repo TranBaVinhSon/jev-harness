@@ -86,6 +86,29 @@ test("tool search narrows a 300-tool catalog by server before ranking tools", as
   assert.equal(decisions[1].details?.candidateCount, 75);
 });
 
+test("tool search accepts a custom server parser for bridged Atlas names", async () => {
+  const largeCatalog: CatalogTool[] = Array.from({ length: 300 }, (_, index) => ({
+    name: `mcp__atlas__${index % 2 === 0 ? "billing" : "crm"}_tool_${index}`,
+    description: `Tool ${index}`,
+  }));
+  const billing = largeCatalog.filter((tool) => tool.name.includes("__billing_"));
+  const hook = jevToolSearch({
+    catalog: () => largeCatalog,
+    request: () => "Find a bill",
+    serverOf: (name) => name.split("__")[2]?.split("_")[0] ?? name,
+    client: sequenceChoiceClient([
+      { answer: "billing", probabilities: { billing: 0.94, crm: 0.04, none_of_these: 0.02 } },
+      {
+        answer: billing[0].name,
+        probabilities: Object.fromEntries([...billing.map((tool, index) => [tool.name, index === 0 ? 0.9 : 0.0001]), ["none_of_these", 0.01]]),
+      },
+    ]),
+  });
+  const result = await hook(input("bill"), "tool-1", hookOptions);
+  assert.ok("hookSpecificOutput" in result && result.hookSpecificOutput);
+  assert.equal(result.hookSpecificOutput.hookEventName, "PreToolUse");
+});
+
 test("tool search passes through on the escape choice", async () => {
   const hook = jevToolSearch({
     catalog: () => catalog,

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { HookCallback } from "@anthropic-ai/claude-agent-sdk";
@@ -8,6 +9,7 @@ import {
   type JsonValue,
   type NoulResponse,
   type Question,
+  type Questions,
   type ResultFor,
   type ScoreResponse,
 } from "@typesafe-ai/sdk";
@@ -24,6 +26,7 @@ export type JevDecision = {
   question: string;
   ms: number;
   inputTokens: number;
+  requestId?: string;
   result: JevDecisionResult;
   details?: Record<string, JsonValue>;
 };
@@ -41,12 +44,23 @@ export type AskOptions<Q extends Question> = {
   details?: (answer: ResultFor<Q>) => Record<string, JsonValue>;
 };
 
+export type AskManyOptions<Q extends Questions> = {
+  hook: string;
+  sessionId: string;
+  state: EntryType;
+  questions: Q;
+  client?: TypeSafeClient;
+  sink?: JevDecisionSink;
+  signal?: AbortSignal;
+  details?: (name: keyof Q & string, answer: ResultFor<Q[keyof Q]>) => Record<string, JsonValue>;
+};
+
 let standardClient: TypeSafeClient | undefined;
 let hotPathClient: TypeSafeClient | undefined;
 
 export function getJevClient(kind: "standard" | "hot" = "standard"): TypeSafeClient {
   if (kind === "hot") {
-    hotPathClient ??= new TypeSafeClient({ timeout: 1500, retry: { maxRetries: 0 } });
+    hotPathClient ??= new TypeSafeClient({ timeout: Number(process.env.JEV_HOT_TIMEOUT_MS ?? 1500), retry: { maxRetries: 0 } });
     return hotPathClient;
   }
   standardClient ??= new TypeSafeClient();
@@ -134,6 +148,58 @@ export async function ask<const Q extends Question>(options: AskOptions<Q>): Pro
       inputTokens: 0,
       result: { kind: "error", answer: null, error: String(error) },
     });
+    throw error;
+  }
+}
+
+export async function askMany<const Q extends Questions>(
+  options: AskManyOptions<Q>,
+): Promise<{ readonly [K in keyof Q]: ResultFor<Q[K]> }> {
+  const started = Date.now();
+  const names = Object.keys(options.questions);
+  const requestId = randomUUID();
+  try {
+    const client = options.client ?? getJevClient("standard");
+    const response = await client.systemOne(
+      { state: options.state, questions: options.questions },
+      options.signal ? { signal: options.signal } : undefined,
+    );
+    const elapsed = Date.now() - started;
+    const perQuestionTokens = Math.floor(response.usage.input_tokens / names.length);
+    let remainder = response.usage.input_tokens % names.length;
+    for (const name in options.questions) {
+      const answer = response.answers[name];
+      let details: Record<string, JsonValue> | undefined;
+      try {
+        details = options.details?.(name, answer);
+      } catch {
+        details = undefined;
+      }
+      await emit(options.sink, {
+        hook: `${options.hook}.${name}`,
+        sessionId: options.sessionId,
+        question: describeQuestion(options.questions[name]),
+        ms: elapsed,
+        inputTokens: perQuestionTokens + (remainder-- > 0 ? 1 : 0),
+        requestId,
+        result: resultOf(answer),
+        details,
+      });
+    }
+    return response.answers;
+  } catch (error) {
+    const elapsed = Date.now() - started;
+    for (const name in options.questions) {
+      await emit(options.sink, {
+        hook: `${options.hook}.${name}`,
+        sessionId: options.sessionId,
+        question: describeQuestion(options.questions[name]),
+        ms: elapsed,
+        inputTokens: 0,
+        requestId,
+        result: { kind: "error", answer: null, error: String(error) },
+      });
+    }
     throw error;
   }
 }

@@ -54,7 +54,7 @@ export function loadTasks(path: string, checks: Record<string, TaskCheck> = {}):
     return {
       ...entry,
       check: (answer: string, trace: Trace) => {
-        const used = new Set(trace.tools.map((tool) => tool.name));
+        const used = new Set(trace.tools.filter((tool) => !tool.error).map((tool) => tool.name));
         const expectedToolsPass = entry.expectTools?.every((tool) => used.has(tool)) ?? true;
         return expectedToolsPass && answerMatches(answer, entry.expectAnswer) && (checks[entry.id]?.(answer, trace) ?? true);
       },

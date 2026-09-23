@@ -11,6 +11,7 @@ export type JevToolSearchOptions = {
   shadow?: boolean;
   sink?: JevDecisionSink;
   client?: TypeSafeClient;
+  serverOf?: (name: string) => string;
 };
 
 const toolSearchInputSchema = z.object({ query: z.string(), max_results: z.number().int().positive().optional() });
@@ -22,7 +23,7 @@ const SERVER_MASS = 0.9;
 const MAX_SERVERS = 3;
 const EXTRA_FOR_SELECT = 2;
 
-const serverOf = (name: string) => name.split("__")[1] ?? name;
+const defaultServerOf = (name: string) => name.split("__")[1] ?? name;
 
 function ranked(answer: ChoiceResponse): [string, number][] {
   return Object.entries(answer.probabilities).sort((left, right) => right[1] - left[1]);
@@ -59,7 +60,7 @@ export function jevToolSearch(options: JevToolSearchOptions): HookCallback {
       let candidates = await options.catalog();
 
       if (candidates.length > MAX_CANDIDATES) {
-        const servers = Map.groupBy(candidates, (tool) => serverOf(tool.name));
+        const servers = Map.groupBy(candidates, (tool) => (options.serverOf ?? defaultServerOf)(tool.name));
         if (servers.size > MAX_CANDIDATES) return {};
         const serverAnswer = await ask({
           hook: "tool-search.server",

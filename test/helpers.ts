@@ -4,6 +4,23 @@ export function choiceClient(answer: string, probabilities: Record<string, numbe
   return sequenceChoiceClient([{ answer, probabilities, confidence }]);
 }
 
+export function answersClient(answers: Record<string, unknown>, inputTokens = 17): TypeSafeClient {
+  return new TypeSafeClient({
+    apiKey: "test-key",
+    baseURL: "https://jev.invalid",
+    retry: { maxRetries: 0 },
+    fetch: async () =>
+      new Response(
+        JSON.stringify({
+          model: "jev-test",
+          answers,
+          usage: { input_tokens: inputTokens, output_tokens: 0 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+  });
+}
+
 export function sequenceChoiceClient(
   responses: { answer: string; probabilities: Record<string, number>; confidence?: number }[],
 ): TypeSafeClient {
