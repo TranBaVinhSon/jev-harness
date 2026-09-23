@@ -1,0 +1,6 @@
+{"id":"support-package","prompt":"What support package did ACME buy? Quote the exact result code the tool returns.","expectTools":["mcp__support__get_support_tier"],"expectAnswer":"REF-4220"}
+{"id":"owed","prompt":"How much does ACME still owe us? Quote the exact result code the tool returns.","expectTools":["mcp__billing__get_outstanding_balance"],"expectAnswer":"REF-4150"}
+{"id":"happy","prompt":"Are ACME's users happy with how we handle their problems? Give me the number and quote the exact result code.","expectTools":["mcp__support__get_csat_score"],"expectAnswer":"REF-4199"}
+{"id":"tax","prompt":"Which tax jurisdiction appears on ACME's bills? Quote the exact result code the tool returns.","expectTools":["mcp__billing__get_tax_region"],"expectAnswer":"REF-4178"}
+{"id":"vacation","prompt":"How many vacation days does Priya have left? Quote the exact result code the tool returns.","expectTools":["mcp__hr__get_pto_balance"],"expectAnswer":"REF-4234"}
+{"id":"owner","prompt":"Who on our side owns the ACME account? Quote the exact result code the tool returns.","expectTools":["mcp__crm__get_customer_profile"],"expectAnswer":"REF-4101"}

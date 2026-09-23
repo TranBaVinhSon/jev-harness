@@ -1,0 +1,7 @@
+node_modules/
+bench/results/
+bench/atlas/.env
+bench/atlas/tasks.jsonl
+bench/atlas/gt.csv
+bench/atlas/coverage.json
+.DS_Store
