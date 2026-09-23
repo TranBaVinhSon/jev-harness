@@ -1,8 +1,27 @@
-# Jev agent benchmark
+# jev-harness
 
-This repository measures whether Jev lowers the cost per passed Claude Agent SDK task without reducing the pass rate. Claude chooses tools and skills. Jev ranks deferred tools, trims large tool results with a read-back path, and recommends one mid-session model or effort escalation after observed lack of progress.
+jev-harness makes Jev the decision-making model for AI agents. The agent's own model still plans, calls tools, and writes the answer. Jev makes the small, frequent decisions around it: which tools fit the request, which parts of a large tool result to keep, and whether a stalled session needs a stronger model. Each decision is a typed question (a choice, a yes/no, or a score) that Jev answers with probabilities, and every decision passes through when Jev errors or times out, so a Jev failure never breaks the agent.
 
 ![Jev-as-custom-harness](docs/jev-as-custom-harness.png)
+
+## Supported frameworks
+
+| Framework | Status |
+|---|---|
+| [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) (TypeScript) | Supported |
+| Other agent frameworks | Planned |
+
+Each decision is a Claude Agent SDK hook today. The Jev questions behind the hooks take plain state (the request, tool names and descriptions, tool output, recent attempts), so supporting another framework means mapping its tool-call events onto the same decisions rather than writing new ones.
+
+## Decisions
+
+| Decision | Hook | SDK events | What Jev decides |
+|---|---|---|---|
+| Tool ranking | `jevToolSearch` in `src/jev-tool-search.ts` | `PreToolUse` on `ToolSearch` | Which tools in the deferred catalog fit the request. The hook rewrites Claude's search to select Jev's top-ranked tools, and Claude still chooses which one to call. |
+| Result trimming | `jevTrim` in `src/jev-trim.ts` | `PostToolUse` | Which chunks of a large tool result (8K to 100K characters by default) the agent needs. The rest goes to a spill file that Claude reads back with the `read_spill` tool. |
+| Escalation | `jevEscalation` in `src/jev-escalate.ts` | `PostToolUseFailure`, `PostToolBatch` | Whether repeated failures, repeated calls, or a long run come from a blocker that needs deeper reasoning. If so, the session switches to a stronger model or a higher effort, at most once. |
+
+Every hook accepts `shadow: true`, which asks Jev and logs the decision without acting on it, and a `sink` that receives each decision. `ask` and `askMany` in `src/jev.ts` are the building blocks for new decisions.
 
 ## Install and test
 
@@ -11,6 +30,69 @@ npm install
 npm run typecheck
 npm test
 ```
+
+## Use with the Claude Agent SDK
+
+You need Node 22.18 or newer, Claude Agent SDK credentials, and a `TYPESAFE_API_KEY` for Jev. The harness is not published to npm yet, so import it from a checkout of this repository. The example below starts on Haiku, lets Jev rank and trim the tools from your MCP servers, and escalates to Sonnet if Jev decides the task needs it:
+
+```ts
+import { query, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
+import { createJsonlDecisionSink } from "./src/jev.ts";
+import { jevEscalation } from "./src/jev-escalate.ts";
+import { jevToolSearch, type CatalogTool } from "./src/jev-tool-search.ts";
+import { createSpillServer, jevTrim } from "./src/jev-trim.ts";
+
+const task = "Summarize the open bugs in our issue tracker.";
+const servers = {}; // Your MCP servers.
+const catalog: CatalogTool[] = []; // { name: "mcp__<server>__<tool>", description } for each of their tools.
+const spillDirectory = "/tmp/jev-spill";
+const sink = createJsonlDecisionSink("logs/jev-decisions.jsonl");
+
+const escalate = jevEscalation({
+  session: {
+    setModel: (model) => agent.setModel(model),
+    applyFlagSettings: (settings) => agent.applyFlagSettings(settings),
+  },
+  action: { kind: "model", model: "claude-sonnet-5" },
+  request: () => task,
+  sink,
+});
+
+// Switching models mid-session needs streaming input, so keep the input open until the result arrives.
+let finish = () => {};
+const finished = new Promise<void>((resolve) => (finish = resolve));
+async function* input(): AsyncGenerator<SDKUserMessage> {
+  yield { type: "user", message: { role: "user", content: task }, parent_tool_use_id: null };
+  await finished;
+}
+
+const agent = query({
+  prompt: input(),
+  options: {
+    model: "claude-haiku-4-5",
+    env: { ...process.env, ENABLE_TOOL_SEARCH: "true" },
+    mcpServers: { ...servers, jev: createSpillServer(spillDirectory) },
+    hooks: {
+      PreToolUse: [{ matcher: "ToolSearch", hooks: [jevToolSearch({ catalog: () => catalog, request: () => task, sink })] }],
+      PostToolUse: [{ matcher: "mcp__.*|Bash|WebFetch", hooks: [jevTrim({ request: () => task, spillDirectory, sink })] }],
+      PostToolUseFailure: [{ hooks: [escalate] }],
+      PostToolBatch: [{ hooks: [escalate] }],
+    },
+  },
+});
+
+for await (const message of agent) {
+  if (message.type !== "result") continue;
+  finish();
+  console.log(message.subtype === "success" ? message.result : message.subtype);
+}
+```
+
+The hooks call Jev through a client with a 1.5 s timeout and no retries. Set `JEV_HOT_TIMEOUT_MS` to change the timeout. Use each hook separately if you only want one decision. For example, `jevTrim` with the spill server needs neither tool search nor streaming input.
+
+## Benchmark
+
+The benchmark measures whether Jev lowers the cost per passed Claude Agent SDK task without reducing the pass rate.
 
 Run the local demo with a cheap model:
 
@@ -46,7 +128,7 @@ The report prints the before/after metrics and paired 95% bootstrap intervals. I
 
 Set `BENCH_PRICE_TABLE` to a JSON map when a provider uses prices other than the report defaults. The SDK's `costUSD` remains authoritative. The price table only divides that total among uncached input, cache write, cache read, and output.
 
-## v0.1 benchmark
+### v0.1 benchmark
 
 v0.1 is the three built hooks: tool ranking, trimming, and escalation. The benchmark is MCP-Atlas in full-catalog mode on the 30 keyless tasks. `ATLAS_MODE=full` shows Claude all 138 tools from the 20 running servers instead of the 7 to 37 each task enables, so Claude has to search a catalog with overlapping tool names. Jev ranks that same catalog.
 
@@ -72,7 +154,7 @@ BASELINE=escalate-rules npm run report -- bench/results/<run>.graded.jsonl
 
 The first report is the v0.1 verdict against Sonnet. v0.1 is worth shipping only if `after` also beats `fixed-cheap` and `escalate-rules` on cost per passed task or pass rate. Otherwise the saving comes from Haiku, not Jev. Any judge works if every arm goes through it, but spot-check a sample of its verdicts by hand. If the result looks promising, rerun with `REPEATS=3` before trusting the intervals.
 
-## MCP-Atlas
+### MCP-Atlas
 
 Prerequisites:
 
@@ -116,7 +198,7 @@ Without an OpenAI-compatible judge endpoint, set `ATLAS_JUDGE=claude` and `EVAL_
 
 The grader runs each arm and repeat through the same judge, sets `coverage`, marks a task passed at coverage 0.75, and flags unnoticed trim misses when omitted chunks contain ground-truth values and the agent never called `read_spill`.
 
-## App-specific tasks
+### App-specific tasks
 
 Copy `bench/config.ts` to `bench/config.<app>.ts`, replace the MCP servers and task file, and keep the arm definitions unchanged. A benchmark task may specify `expectTools`, `expectAnswer`, and an application-specific `check`. Use `lease` when every run needs an isolated sandbox. Add skill advice only in the app benchmark because MCP-Atlas has no skills.
 
