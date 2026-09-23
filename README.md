@@ -2,7 +2,7 @@
 
 This repository measures whether Jev lowers the cost per passed Claude Agent SDK task without reducing the pass rate. Claude chooses tools and skills. Jev ranks deferred tools, trims large tool results with a read-back path, and recommends one mid-session model or effort escalation after observed lack of progress.
 
-![Where Jev plugs into an agent loop](docs/jev-agent-loop.png)
+![Jev-as-custom-harness](docs/jev-as-custom-harness.png)
 
 ## Install and test
 
@@ -45,6 +45,31 @@ The report prints the before/after metrics and paired 95% bootstrap intervals. I
 - p95 wall time rises no more than 10%.
 
 Set `BENCH_PRICE_TABLE` to a JSON map when a provider uses prices other than the report defaults. The SDK's `costUSD` remains authoritative. The price table only divides that total among uncached input, cache write, cache read, and output.
+
+## v0.1 benchmark
+
+v0.1 is the three built hooks: tool ranking, trimming, and escalation. The benchmark is MCP-Atlas in full-catalog mode on the 30 keyless tasks. `ATLAS_MODE=full` shows Claude all 138 tools from the 20 running servers instead of the 7 to 37 each task enables, so Claude has to search a catalog with overlapping tool names. Jev ranks that same catalog.
+
+Four arms, three repeats (360 runs):
+
+| Arm | Setup | Question it answers |
+|---|---|---|
+| `before` | Opus 5 | Baseline |
+| `fixed-cheap` | Sonnet 5 | How much of the saving comes from Sonnet alone |
+| `escalate-rules` | Sonnet 5, switches to Opus 5 on code signals only | What escalation earns without Jev |
+| `after` | Sonnet 5 + Jev tool ranking, trimming, and escalation to Opus 5 | v0.1 |
+
+```sh
+ATLAS_MODE=full BENCH_MODEL=claude-opus-5 BENCH_CHEAP_MODEL=claude-sonnet-5 JEV_HOT_TIMEOUT_MS=6000 \
+  ARMS=before,fixed-cheap,escalate-rules,after REPEATS=3 CONCURRENCY=4 \
+  node --env-file=bench/atlas/.env bench/run.ts bench/config.atlas.ts
+ATLAS_JUDGE=claude EVAL_LLM_MODEL=claude-opus-5 npm run atlas:grade -- bench/results/<run>.jsonl
+npm run report -- bench/results/<run>.graded.jsonl
+CANDIDATE=fixed-cheap npm run report -- bench/results/<run>.graded.jsonl
+BASELINE=escalate-rules npm run report -- bench/results/<run>.graded.jsonl
+```
+
+The first report is the v0.1 verdict against Opus. v0.1 is worth shipping only if `after` also beats `fixed-cheap` and `escalate-rules` on cost per passed task or pass rate. Otherwise the saving comes from Sonnet, not Jev.
 
 ## MCP-Atlas
 
@@ -96,7 +121,7 @@ Copy `bench/config.ts` to `bench/config.<app>.ts`, replace the MCP servers and t
 
 ## Roadmap
 
-Each item is a Jev decision in the agent loop, shown dashed in the diagram. Check each classifier offline against logged decisions before it runs in a benchmark.
+Each item is a Jev decision in the agent loop, shown as a dashed row in the diagram. Check each classifier offline against logged decisions before it runs in a benchmark.
 
 - **Jev as the benchmark judge.** Grade answers claim by claim with Jev instead of an LLM judge. Validate it first against the Claude judge's per-claim verdicts on existing graded runs.
 - **Completion check.** A Stop hook asks whether the last answer covers every part of the request and, if not, returns `decision: "block"` so the agent keeps working, at most once per session. Validate it on graded answers: coverage below 1 marks an incomplete answer.

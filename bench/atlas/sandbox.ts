@@ -154,6 +154,7 @@ export class AtlasPool {
             env: {
               ATLAS_URL: `http://127.0.0.1:${container.port}`,
               ATLAS_ENABLED_TOOLS: JSON.stringify(task.enabledTools ?? []),
+              ATLAS_MODE: process.env.ATLAS_MODE ?? "",
             },
           },
         },

@@ -61,11 +61,14 @@ const tasks = loadAtlasTasks(resolve("bench/atlas/tasks.jsonl")).filter(
 
 // Filled once the pool is up: bridged tool name -> the description Claude's own ToolSearch sees.
 const descriptions = new Map<string, string>();
+// Full mode shows Claude every tool from every running server, so Jev must rank that same catalog
+// rather than the task's enabled tools, which would hand it the answer.
+const fullCatalog = process.env.ATLAS_MODE === "full";
 const arms = beforeAfterArms({
   catalog: ({ task }) =>
-    (task.enabledTools ?? []).flatMap((name) => {
-      const description = descriptions.get(atlasToolName(name));
-      return description === undefined ? [] : [{ name: `mcp__atlas__${atlasToolName(name)}`, description }];
+    (fullCatalog ? [...descriptions.keys()] : (task.enabledTools ?? []).map(atlasToolName)).flatMap((name) => {
+      const description = descriptions.get(name);
+      return description === undefined ? [] : [{ name: `mcp__atlas__${name}`, description }];
     }),
   serverOf: (name) => name.split("__")[2]?.split("_")[0] ?? name,
   trimMatcher: "mcp__atlas__.*",

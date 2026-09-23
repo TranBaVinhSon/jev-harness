@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="770" viewBox="0 0 940 770" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Jev-as-custom-harness</title>
+  <defs>
+    <marker id="flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2B2B33"/>
+    </marker>
+    <marker id="jev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6D4AFF"/>
+    </marker>
+  </defs>
+
+  <rect width="940" height="770" fill="#FFFFFF"/>
+
+  <!-- Title and legend -->
+  <text x="40" y="42" font-size="22" font-weight="700" fill="#1C1C22">Jev-as-custom-harness</text>
+  <text x="40" y="66" font-size="13" fill="#6B6B76">Claude runs the loop and makes every decision. Jev makes quick calls at each step.</text>
+  <rect x="720" y="26" width="16" height="14" rx="3" fill="#F1EDFF" stroke="#6D4AFF"/>
+  <text x="744" y="38" font-size="13" fill="#55555F">Built</text>
+  <rect x="720" y="48" width="16" height="14" rx="3" fill="#FFFFFF" stroke="#A08BFF" stroke-dasharray="3 2"/>
+  <text x="744" y="60" font-size="13" fill="#55555F">Roadmap</text>
+
+  <!-- Start -->
+  <rect x="80" y="96" width="280" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="220" y="123" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">Task starts</text>
+  <text x="380" y="123" font-size="13" fill="#6B6B76">model set by config, never by the prompt</text>
+
+  <!-- Loop container -->
+  <rect x="40" y="168" width="860" height="484" rx="16" fill="#F6F6F8" stroke="#D5D5DD" stroke-width="1.5"/>
+  <text x="240" y="192" font-size="13" font-weight="600" fill="#55555F">Agent loop</text>
+  <line x1="220" y1="140" x2="220" y2="214" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- Loop steps -->
+  <g font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">
+    <rect x="80" y="216" width="280" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+    <text x="220" y="243">Claude chooses a tool</text>
+    <rect x="80" y="348" width="280" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+    <text x="220" y="375">Tool runs, result comes back</text>
+    <rect x="80" y="440" width="280" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+    <text x="220" y="467">Claude checks progress</text>
+    <rect x="80" y="580" width="280" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+    <text x="220" y="607">Claude wants to finish</text>
+  </g>
+  <line x1="220" y1="260" x2="220" y2="346" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+  <line x1="220" y1="392" x2="220" y2="438" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+  <line x1="220" y1="484" x2="220" y2="578" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+
+  <!-- Keep going -->
+  <path d="M80,602 H60 V238 H78" fill="none" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+  <line x1="80" y1="462" x2="60" y2="462" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="52" y="420" font-size="12" fill="#55555F" text-anchor="middle" transform="rotate(-90 52 420)">keep going</text>
+
+  <!-- Final answer -->
+  <line x1="220" y1="624" x2="220" y2="688" stroke="#2B2B33" stroke-width="1.5" marker-end="url(#flow)"/>
+  <rect x="80" y="690" width="280" height="44" rx="10" fill="#FFFFFF" stroke="#2B2B33" stroke-width="1.5"/>
+  <text x="220" y="717" font-size="15" font-weight="600" fill="#1C1C22" text-anchor="middle">Final answer</text>
+
+  <!-- Connectors from Jev to each step -->
+  <g stroke="#6D4AFF" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#jev)">
+    <line x1="448" y1="238" x2="362" y2="238"/>
+    <line x1="448" y1="370" x2="362" y2="370"/>
+    <line x1="448" y1="462" x2="362" y2="462"/>
+    <line x1="448" y1="602" x2="362" y2="602"/>
+    <line x1="448" y1="712" x2="362" y2="712"/>
+  </g>
+
+  <!-- Jev rows: built -->
+  <g font-size="13.5" fill="#2A2140">
+    <rect x="450" y="206" width="430" height="30" rx="7" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="466" y="226"><tspan font-weight="700" fill="#5B3BE0">Pick tools</tspan><tspan x="606">suggests the best-fitting tools</tspan></text>
+
+    <rect x="450" y="355" width="430" height="30" rx="7" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="466" y="375"><tspan font-weight="700" fill="#5B3BE0">Trim output</tspan><tspan x="606">keeps what matters, rest on request</tspan></text>
+
+    <rect x="450" y="424" width="430" height="30" rx="7" fill="#F1EDFF" stroke="#6D4AFF"/>
+    <text x="466" y="444"><tspan font-weight="700" fill="#5B3BE0">Escalate</tspan><tspan x="606">if stuck, switch to a stronger model</tspan></text>
+  </g>
+
+  <!-- Jev rows: roadmap -->
+  <g font-size="13.5" fill="#4A3F6B">
+    <rect x="450" y="244" width="430" height="30" rx="7" fill="#FFFFFF" stroke="#A08BFF" stroke-dasharray="5 3"/>
+    <text x="466" y="264"><tspan font-weight="700" fill="#7C62F0">Suggest a skill</tspan><tspan x="606">flags a better-fitting skill</tspan></text>
+
+    <rect x="450" y="282" width="430" height="30" rx="7" fill="#FFFFFF" stroke="#A08BFF" stroke-dasharray="5 3"/>
+    <text x="466" y="302"><tspan font-weight="700" fill="#7C62F0">Approve calls</tspan><tspan x="606">OKs safe calls, asks about risky ones</tspan></text>
+
+    <rect x="450" y="462" width="430" height="30" rx="7" fill="#FFFFFF" stroke="#A08BFF" stroke-dasharray="5 3"/>
+    <text x="466" y="482"><tspan font-weight="700" fill="#7C62F0">Hint</tspan><tspan x="606">if stuck, nudge toward a new approach</tspan></text>
+
+    <rect x="450" y="500" width="430" height="30" rx="7" fill="#FFFFFF" stroke="#A08BFF" stroke-dasharray="5 3"/>
+    <text x="466" y="520"><tspan font-weight="700" fill="#7C62F0">Compact context</tspan><tspan x="606">drops old results as context fills</tspan></text>
+
+    <rect x="450" y="587" width="430" height="30" rx="7" fill="#FFFFFF" stroke="#A08BFF" stroke-dasharray="5 3"/>
+    <text x="466" y="607"><tspan font-weight="700" fill="#7C62F0">Check complete</tspan><tspan x="606">anything unanswered? keep going</tspan></text>
+
+    <rect x="450" y="697" width="430" height="30" rx="7" fill="#FFFFFF" stroke="#A08BFF" stroke-dasharray="5 3"/>
+    <text x="466" y="717"><tspan font-weight="700" fill="#7C62F0">Grade answer</tspan><tspan x="606">scores it claim by claim, for evals</tspan></text>
+  </g>
+</svg>
