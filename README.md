@@ -50,26 +50,27 @@ Set `BENCH_PRICE_TABLE` to a JSON map when a provider uses prices other than the
 
 v0.1 is the three built hooks: tool ranking, trimming, and escalation. The benchmark is MCP-Atlas in full-catalog mode on the 30 keyless tasks. `ATLAS_MODE=full` shows Claude all 138 tools from the 20 running servers instead of the 7 to 37 each task enables, so Claude has to search a catalog with overlapping tool names. Jev ranks that same catalog.
 
-Four arms, three repeats (360 runs):
+Four arms, one repeat (120 runs):
 
 | Arm | Setup | Question it answers |
 |---|---|---|
-| `before` | Opus 5 | Baseline |
-| `fixed-cheap` | Sonnet 5 | How much of the saving comes from Sonnet alone |
-| `escalate-rules` | Sonnet 5, switches to Opus 5 on code signals only | What escalation earns without Jev |
-| `after` | Sonnet 5 + Jev tool ranking, trimming, and escalation to Opus 5 | v0.1 |
+| `before` | Sonnet 5 | Baseline |
+| `fixed-cheap` | Haiku 4.5 | How much of the saving comes from Haiku alone |
+| `escalate-rules` | Haiku 4.5, switches to Sonnet 5 on code signals only | What escalation earns without Jev |
+| `after` | Haiku 4.5 + Jev tool ranking, trimming, and escalation to Sonnet 5 | v0.1 |
 
 ```sh
-ATLAS_MODE=full BENCH_MODEL=claude-opus-5 BENCH_CHEAP_MODEL=claude-sonnet-5 JEV_HOT_TIMEOUT_MS=6000 \
-  ARMS=before,fixed-cheap,escalate-rules,after REPEATS=3 CONCURRENCY=4 \
+ATLAS_MODE=full BENCH_MODEL=claude-sonnet-5 BENCH_CHEAP_MODEL=claude-haiku-4-5 JEV_HOT_TIMEOUT_MS=6000 \
+  ARMS=before,fixed-cheap,escalate-rules,after REPEATS=1 CONCURRENCY=4 \
   node --env-file=bench/atlas/.env bench/run.ts bench/config.atlas.ts
-ATLAS_JUDGE=claude EVAL_LLM_MODEL=claude-opus-5 npm run atlas:grade -- bench/results/<run>.jsonl
+MCP_ATLAS_DIR=/path/to/mcp-atlas EVAL_LLM_BASE_URL=<openai-compatible url> EVAL_LLM_API_KEY=... \
+  EVAL_LLM_MODEL=openai/<judge model> npm run atlas:grade -- bench/results/<run>.jsonl
 npm run report -- bench/results/<run>.graded.jsonl
 CANDIDATE=fixed-cheap npm run report -- bench/results/<run>.graded.jsonl
 BASELINE=escalate-rules npm run report -- bench/results/<run>.graded.jsonl
 ```
 
-The first report is the v0.1 verdict against Opus. v0.1 is worth shipping only if `after` also beats `fixed-cheap` and `escalate-rules` on cost per passed task or pass rate. Otherwise the saving comes from Sonnet, not Jev.
+The first report is the v0.1 verdict against Sonnet. v0.1 is worth shipping only if `after` also beats `fixed-cheap` and `escalate-rules` on cost per passed task or pass rate. Otherwise the saving comes from Haiku, not Jev. Any judge works if every arm goes through it, but spot-check a sample of its verdicts by hand. If the result looks promising, rerun with `REPEATS=3` before trusting the intervals.
 
 ## MCP-Atlas
 
